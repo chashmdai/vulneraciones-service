@@ -1,0 +1,29 @@
+# ======================================================================================
+# Perfil 'local': ejecución en AISLAMIENTO (sin RabbitMQ ni servicios hermanos).
+#   - No consume eventos (consumo=none) y publica solo por log (transporte=log).
+#   - Costuras de enriquecimiento desactivadas.
+#   - Datos reservados sin cifrar (passthrough) -> SOLO datos sintéticos.
+#   - Secreto JWT de desarrollo con valor por defecto (NO usar en producción).
+# Requiere una instancia local de MySQL con la BD db_vulneraciones.
+# ======================================================================================
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/db_vulneraciones?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&tinyInt1isBit=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+
+smid:
+  jwt:
+    secreto-activo: ${JWT_SECRET:clave-de-desarrollo-local-no-usar-en-produccion-2026}
+  reservado:
+    cifrado: none
+  enriquecimiento:
+    casos:
+      activo: false
+    personas:
+      activo: false
+    catalogo:
+      activo: false
+  eventos:
+    transporte: log
+    consumo: none

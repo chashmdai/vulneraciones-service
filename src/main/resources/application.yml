@@ -1,0 +1,95 @@
+# ======================================================================================
+# Configuración base de vulneraciones-service (SMID 6.5) — Ficha Interna Reservada (FIR)
+# Todos los secretos y endpoints se inyectan por variables de entorno (${VAR}).
+# Perfil 'local' (application-local.yml) ajusta el servicio para ejecución en aislamiento.
+# ======================================================================================
+server:
+  port: 8091
+
+spring:
+  application:
+    name: vulneraciones-service
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:db_vulneraciones}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&tinyInt1isBit=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${DB_USER:smid}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate          # el esquema lo gobierna Flyway; Hibernate solo valida
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC          # todas las marcas temporales se manejan en UTC
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    virtual-host: ${RABBIT_VHOST:/}
+
+smid:
+  jwt:
+    issuer: ${JWT_ISSUER:smid-auth}
+    audience: ${JWT_AUDIENCE:smid-servicios}
+    kid-activo: ${JWT_KID_ACTIVO:smid-2026-06}
+    secreto-activo: ${JWT_SECRET}            # obligatorio (UTF-8, >= 32 bytes)
+    kid-previo: ${JWT_KID_PREVIO:}           # opcional (ventana de rotación)
+    secreto-previo: ${JWT_SECRET_PREVIO:}    # opcional
+
+  seguridad:
+    roles-coordinacion: ${ROLES_COORDINACION:COORDINADOR,COORDINACION,ADMIN_SEDE,ADMIN_NACIONAL}
+    roles-acceso-reservado: ${ROLES_ACCESO_RESERVADO:COORDINADOR,ADMIN_SEDE,ADMIN_NACIONAL}
+
+  fir:
+    inicio-oficial: ${FIR_INICIO_OFICIAL:2027-01-01}   # corte serie OFICIAL (antes => BETA)
+
+  sedes:
+    codigo-defecto: ${SEDE_CODIGO_DEFECTO:SD}
+    # Mapear alt_key de sede -> código corto por entorno, p. ej.:
+    #   smid.sedes.codigos.4f1c...e9=RM
+    codigos: {}
+
+  reservado:
+    cifrado: ${RESERVADO_CIFRADO:aes-gcm}    # aes-gcm (producción) | none (solo desarrollo)
+    clave: ${RESERVADO_CLAVE:}               # Base64 de 32 bytes (AES-256) para aes-gcm
+
+  enriquecimiento:
+    casos:
+      activo: ${ENRIQUECIMIENTO_CASOS_ACTIVO:false}
+      url: ${CASOS_URL:http://localhost:8090/api}
+    personas:
+      activo: ${ENRIQUECIMIENTO_PERSONAS_ACTIVO:false}
+      url: ${PERSONAS_URL:http://localhost:8088/api}
+    catalogo:
+      activo: ${ENRIQUECIMIENTO_CATALOGO_ACTIVO:false}
+      url: ${CATALOGO_URL:http://localhost:8087/api}
+
+  eventos:
+    transporte: ${EVENTOS_TRANSPORTE:rabbitmq}            # rabbitmq | log
+    consumo: ${EVENTOS_CONSUMO:rabbitmq}                  # rabbitmq | none
+    exchange: ${EVENTOS_EXCHANGE:smid.eventos}
+    cola-caso-abierto: ${EVENTOS_COLA_CASO_ABIERTO:vulneraciones.caso-abierto}
+    dlx: ${EVENTOS_DLX:vulneraciones.dlx}
+    dlq-caso-abierto: ${EVENTOS_DLQ_CASO_ABIERTO:vulneraciones.caso-abierto.dlq}
+    routing-caso-abierto: ${EVENTOS_ROUTING_CASO_ABIERTO:caso.abierto}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
