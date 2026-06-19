@@ -14,6 +14,7 @@ casos-service (6.4).
 - **MySQL 8** (InnoDB, `utf8mb4_0900_ai_ci`), **Flyway** (`ddl-auto=validate`)
 - **RabbitMQ** (consumo de `caso.abierto` y publicación de eventos; transporte conmutable a log)
 - **jjwt 0.12.5** (validación de JWT HS256 con `kid`)
+- **SpringDoc OpenAPI 2.8.x** (Swagger UI)
 - **Testcontainers** (integración y concurrencia), **JUnit 5**, **AssertJ**
 
 Puerto por defecto: **8091**. Tras el `StripPrefix=1` del gateway, los controladores cuelgan de
@@ -126,6 +127,13 @@ a fallos.
 ## 6. API REST
 
 Todas las rutas requieren `Authorization: Bearer <JWT>`. Identificadores públicos: **solo `alt_key`**.
+Swagger documenta las rutas internas del servicio (`/vulneraciones/**`); el frontend consume siempre
+vía Gateway anteponiendo `/api`, por ejemplo `/api/vulneraciones/fichas`.
+
+Documentación local:
+
+- `GET /v3/api-docs`
+- `GET /swagger-ui/index.html`
 
 | Método | Ruta                                              | Descripción                                  |
 |--------|---------------------------------------------------|----------------------------------------------|
